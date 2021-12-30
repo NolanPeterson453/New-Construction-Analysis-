@@ -24,19 +24,6 @@ unwanted_vars <- c("CLOS", "FCONPR", "AUTH", "ID", "PVALU", "FNSQ_F",
                    "FFNSQ_F", "CAT")
 soc_data <- select(soc_data, -unwanted_vars)
 
-# Assign column types 
-factor_vars <- c("ACS", "AGER", "ASSOC", "BASE", "CON", "DECK", "DET", 
-                 "DIV", "FNBS", "FOYER", "FRAME", "GAR", "HEAT", "HEAT2", 
-                 "LNDR", "MFGS", "PATI", "PRCH", "SEWER", "STOR", "WAL1", 
-                 "WAL2", "WALS","WATER", "BEDR", "FPLS", "FULB", "HAFB", "FUEL",
-                 "FUEL2")
-
-contin_vars <- c("WEIGHT", "SLPR", "FSLPR", "SQFS", "FSQFS", "LOTV", "FNSQ", 
-                 "FFNSQ", "AREA")
-
-soc_data <- soc_data %>% 
-  convert(fct(factor_vars),
-          num(contin_vars))
 
 # Convert date variables to lubridate date type
 soc_data <- soc_data %>%
