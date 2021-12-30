@@ -61,12 +61,8 @@ soc_data <- soc_data %>%
   filter(FSLPR != 0,
          !is.na(COMP))
 
-# Expand the date frame by replicate weight 
-soc_data_expanded <- soc_data %>%
-  expandRows('WEIGHT')
-
 # Impute missing with mean 
-soc_data_expanded <- soc_data_expanded %>% 
+soc_data <- soc_data %>% 
   mutate(FSQFS = ifelse(test = (FSQFS == 0), 
                         yes = mean(FSQFS[FSQFS != 0]), no = FSQFS),
          LOTV = ifelse(test = (LOTV == 0), 
@@ -75,6 +71,6 @@ soc_data_expanded <- soc_data_expanded %>%
                        yes = mean(AREA[AREA != 0]), no = AREA))
 
 # Write csv file of cleaned data
-write_csv(soc_data_expanded, 
+write_csv(soc_data, 
           file = "cleaned_soc.csv" )
 
