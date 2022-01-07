@@ -8,8 +8,9 @@
 # Library statments 
 library(tidyverse)
 library(splitstackshape)
-library(randomForest)
 library(leaps)
+library(ranger)
+library(caret)
 
 # Read in data 
 soc_data <- read_csv(file = "https://raw.githubusercontent.com/NolanPeterson453/New-Construction-Analysis-/main/02_data/cleaned_soc.csv")
@@ -38,6 +39,16 @@ sample <- sample(c(TRUE, FALSE),
                  prob=c(0.8,0.2))
 train <- soc_data[sample, ]
 test <- soc_data[!sample, ]
+
+# Create training and test splits for expanded data  
+set.seed(42)
+sample <- sample(c(TRUE, FALSE), 
+                 nrow(soc_data_expanded), 
+                 replace=TRUE, 
+                 prob=c(0.8,0.2))
+train_expanded <- soc_data_expanded[sample, ]
+test_expanded <- soc_data_expanded[!sample, ]
+
 
 
 ################################################################################
@@ -94,15 +105,59 @@ summary(H_a_model_2) #  Adjusted R-squared:  0.5555
   # potnetial high leverage points 
 plot(H_a_model_2)
 
-## Model Selction 
+## Model Selection 
 
-# Choose best model using stepwise selction with AIC as criterion 
+# Choose best model using stepwise selection with AIC as criterion 
 n <- dim(soc_data)[1]
 H_a_model_3 <- step(H_a_model_1, direction = "both", k = log(n))
 summary(H_a_model_3) # Adjusted R-squared:  0.5754
+
+# Find model MSE on train data 
+MSE_train_linear <- sum((H_a_model_3$fitted.values - train$FSLPR)^2) / (dim(train)[1] - 40)
+#2.5601e+10
+
+# Find model MSE on test data 
+linear_preds <- predict(H_a_model_3, newdata = test)
+MSE_test_linear <- sum((linear_preds - test$FSLPR)^2) / (dim(test)[1] - 40)
+#2.0244e+10
 
 ################################################################################
 # Random Forest Model 
 ################################################################################
 
-random
+## Using ranger Package ##
+
+# Fit random forest model on all predictors (weighted)
+ranger_model <- ranger(FSLPR ~ . - WEIGHT, 
+                       data = train, 
+                       case.weights =  train$WEIGHT,
+                       verbose = TRUE)
+
+# Find model MSE on train data (df = n - 40 regression parameters)
+MSE_train_ranger <- sum((ranger_model$predictions - train$FSLPR)^2, na.rm = TRUE) / (dim(train)[1] - 40)
+#1.5188e+10
+
+# Find model MSE on test data 
+ranger_pred <- predict(ranger_model,
+                              data = test,
+                              case.weights = test$WEIGHT)
+MSE_test_ranger <- sum((ranger_pred$predictions - test$FSLPR)^2) / (dim(test)[1] - 40)
+#1.2325e+10
+
+# Tune model using caret package 
+tunned_ranger <- train(FSLPR ~ . - WEIGHT, 
+                    data = train, 
+                    weights =  train$WEIGHT,
+                    method = 'ranger')
+
+tunned_ranger_model <- tunned_ranger$finalModel
+
+# Find model MSE on train data
+MSE_train_tunned_ranger <- sum((tunned_ranger_model$predictions - train$FSLPR)^2, na.rm = TRUE) / (dim(train)[1] - 40)
+#1.3509e+10
+
+# Find model MSE on test data
+tunned_ranger_pred <- predict(tunned_ranger_model,
+                       data = test,
+                       case.weights = test$WEIGHT)
+MSE_test_ranger <- sum((tunned_ranger_pred$predictions - test$FSLPR)^2) / (dim(test)[1] - 40)
