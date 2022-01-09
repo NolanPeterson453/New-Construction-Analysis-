@@ -2,7 +2,7 @@
 title: "New Constuction Home Analysis"
 author: "Nolan Peterson"
 date: "1/8/2022"
-output: html_document
+output: github_document
 ---
 
 ```{r setup, include=FALSE}
