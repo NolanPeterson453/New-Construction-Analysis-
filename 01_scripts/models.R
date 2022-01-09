@@ -114,13 +114,29 @@ H_a_model_3 <- step(H_a_model_1, direction = "both", k = log(n))
 summary(H_a_model_3) # Adjusted R-squared:  0.5754
 
 # Find model MSE on train data 
-MSE_train_linear <- sum((H_a_model_3$fitted.values - train$FSLPR)^2) / (dim(train)[1] - 40)
-#2.5601e+10
+  # Number of regression parameters for calculating degrees of freedom in MSE calculation 
+num_reg_prams <- 40 
+
+   # Number of training examples and number of test examples for n in MSE calculation 
+n_train <- dim(train)[1]
+n_test <- dim(test)[1]
+
+   # write function for repeated MSE calculation 
+MSE_calc <- function(predicted, actual, n, p){
+  sum((predicted - actual)^2, na.rm = TRUE) / (n - p)
+}
+
+MSE_train_linear <- MSE_calc(predicted = H_a_model_3$fitted.values,
+                             actual = train$FSLPR,
+                             n = n_train, 
+                             p = num_reg_prams) #2.5601e+10
 
 # Find model MSE on test data 
 linear_preds <- predict(H_a_model_3, newdata = test)
-MSE_test_linear <- sum((linear_preds - test$FSLPR)^2) / (dim(test)[1] - 40)
-#2.0244e+10
+MSE_test_linear <- MSE_calc(predicted = linear_preds,
+                            actual = test$FSLPR,
+                            n = n_test, 
+                            p = num_reg_prams) #2.0244e+10
 
 ################################################################################
 # Random Forest Model 
@@ -134,16 +150,21 @@ ranger_model <- ranger(FSLPR ~ . - WEIGHT,
                        case.weights =  train$WEIGHT,
                        verbose = TRUE)
 
-# Find model MSE on train data (df = n - 40 regression parameters)
-MSE_train_ranger <- sum((ranger_model$predictions - train$FSLPR)^2, na.rm = TRUE) / (dim(train)[1] - 40)
-#1.5188e+10
+# Find model MSE on train data 
+MSE_train_ranger <- MSE_calc(predicted = ranger_model$predictions, 
+                             actual = train$FSLPR,
+                             n = n_train, 
+                             p = num_reg_prams) #1.5188e+10
 
 # Find model MSE on test data 
 ranger_pred <- predict(ranger_model,
                               data = test,
                               case.weights = test$WEIGHT)
-MSE_test_ranger <- sum((ranger_pred$predictions - test$FSLPR)^2) / (dim(test)[1] - 40)
-#1.2325e+10
+
+MSE_test_ranger <- MSE_calc(predicted = ranger_pred$predictions,
+                            actual = test$FSLPR,
+                            n = n_test,
+                            p = num_reg_prams) #1.2325e+10
 
 # Tune model using caret package 
 tunned_ranger <- train(FSLPR ~ . - WEIGHT, 
@@ -154,11 +175,13 @@ tunned_ranger <- train(FSLPR ~ . - WEIGHT,
 tunned_ranger_model <- tunned_ranger$finalModel
 
 # Find model MSE on train data
-MSE_train_tunned_ranger <- sum((tunned_ranger_model$predictions - train$FSLPR)^2, na.rm = TRUE) / (dim(train)[1] - 40)
-#1.3509e+10
+MSE_train_tunned_ranger <- MSE_calc(predicted = tunned_ranger_model$predictions,
+                                    actual = train$FSLPR,
+                                    n = n_train,
+                                    p = num_reg_prams) #1.3509e+10
 
 # Find model MSE on test data
 tunned_ranger_pred <- predict(tunned_ranger_model,
                        data = test,
                        case.weights = test$WEIGHT)
-MSE_test_ranger <- sum((tunned_ranger_pred$predictions - test$FSLPR)^2) / (dim(test)[1] - 40)
+MSE_test_ranger <- sum((tunned_ranger_pred$predictions - test$FSLPR)^2) / (n_test - num_reg_prams)

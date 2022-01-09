@@ -363,12 +363,13 @@ pre code {
 <div id="data" class="section level2">
 <h2>Data</h2>
 <p>The data for this analysis comes from the Census Bureau’s 2020 Survey of Construction. This is a survey of new construction homes across the US which compiles details regarding the construction methods used, physical specifications of the home as well as some legal/financial details surrounding the home. The data can be found here: <a href="https://www.census.gov/construction/chars/microdata.html" class="uri">https://www.census.gov/construction/chars/microdata.html</a></p>
-<div id="key-insights" class="section level4">
-<h4>Key Insights</h4>
+<div id="key-insights" class="section level3">
+<h3>Key Insights</h3>
 <ul>
 <li><p>Raw data has 25,526 observations and 61 variables.</p></li>
 <li><p>Cleaned data has 12,443 observations and 39 variables.</p></li>
 <li><p>Cleaned data has 30 categorical predictors, 4 continuous predictors, 1 sample weight variable, and 1 continuous response.</p></li>
+<li><p>Code for data cleaning can be found here: <a href="https://github.com/NolanPeterson453/New-Construction-Analysis-/blob/main/01_scripts/data_cleaning.R" class="uri">https://github.com/NolanPeterson453/New-Construction-Analysis-/blob/main/01_scripts/data_cleaning.R</a></p></li>
 </ul>
 </div>
 <div id="cleaning-steps" class="section level3">
@@ -396,6 +397,15 @@ pre code {
 <h4>Observation Selection</h4>
 <p>Only observations where the home was sold were kept in the final data set. This is because sale price is the being used as the primary proxy for home value.</p>
 </div>
+</div>
+</div>
+<div id="exploritory-data-analysis" class="section level2">
+<h2>Exploritory Data Analysis</h2>
+<div id="key-insights-1" class="section level3">
+<h3>Key Insights</h3>
+<ul>
+<li>Distribution of home sale price is right skewed with the vast majority of homes selling for between $100,000 and $750,000.</li>
+</ul>
 </div>
 </div>
 

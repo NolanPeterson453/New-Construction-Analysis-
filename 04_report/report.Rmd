@@ -22,13 +22,15 @@ The aims of this analysis are:
 
 The data for this analysis comes from the Census Bureau's 2020 Survey of Construction. This is a survey of new construction homes across the US which compiles details regarding the construction methods used, physical specifications of the home as well as some legal/financial details surrounding the home. The data can be found here: https://www.census.gov/construction/chars/microdata.html
 
-#### Key Insights 
+### Key Insights 
 
 * Raw data has 25,526 observations and 61 variables. 
 
 * Cleaned data has 12,443 observations and 39 variables.
 
 * Cleaned data has 30 categorical predictors, 4 continuous predictors, 1 sample weight variable, and 1 continuous response. 
+
+* Code for data cleaning can be found here: https://github.com/NolanPeterson453/New-Construction-Analysis-/blob/main/01_scripts/data_cleaning.R
 
 ### Cleaning Steps
 
@@ -41,6 +43,7 @@ Not all variables in raw data set were useful for this analysis. There were prim
 * The variable had low or no predictive power. 
 
 * The variable was proxy for the target response variable. 
+
 
 For example, the variable SQFS_F was removed because this variable because this variable simply indicates if the Census Bureau has at all modified the reported value. Examples of modification to the reported value include top-coding, rounding or imputation. The second reason for removal (lack of predictive power), was used for variables such as ID or variables describing financing (loan type, etc...). These variables do not add any useful information to this analysis. The third type of variables removed, are variable which describe essentially the same thing thing as the response. That is they describe the value of the home in some measure.
 
@@ -57,5 +60,14 @@ There is a substantial amount of unreported values within the data set. For the 
 #### Observation Selection
 
 Only observations where the home was sold were kept in the final data set. This is because sale price is the being used as the primary proxy for home value. 
+
+## Exploritory Data Analysis 
+
+### Key Insights 
+
+* Distribution of home sale price is right skewed with the vast majority of homes selling for between \$100,000 and \$750,000. 
+
+
+
 
 
