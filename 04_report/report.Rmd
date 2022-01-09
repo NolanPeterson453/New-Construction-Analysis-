@@ -1,0 +1,43 @@
+---
+title: "New Constuction Home Analysis"
+author: "Nolan Peterson"
+date: "1/8/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Introduction 
+
+The aims of this analysis are:
+
+* Observe and analyze the trends and relevant statistics for the new construction home market.
+
+* Build a model to predict new home sale prices based off of selected features. 
+
+## Data 
+
+The data for this analysis comes from the Census Bureau's 2020 Survey of Construction. This is a survey of new construction homes across the US which compiles details regarding the construction methods used, physical specifications of the home as well as some legal/financial details surrounding the home. The data can be found here: https://www.census.gov/construction/chars/microdata.html
+
+#### Key Insights 
+
+* Raw data has 25,526 observations and 61 variables. 
+
+* Cleaned data has 12,443 observations and 39 variables.
+
+* Cleaned data has 30 categorical predictors, 4 continuous predictors, 1 sample weight variable, and 1 continuous response. 
+
+#### Variable Selction
+
+Not all variables in raw data set were useful for this analysis. There were primarily three reasons why variables would be removed. 
+
+* The variable was a flag variable. 
+
+* The variable had low or no predictive power. 
+
+* The variable was proxy for the target response variable. 
+
+For example, the variable 'SQFS_F' was removed because this variable because this variable simply indicates if the Census Bureau has at all modified the reported value. Examples of modification to the reported value include top-coding, rounding or imputation. The second reason for removal (lack of predictive power), was used for variables such as ID or variables describing financing (loan type, etc...). These variables do not add any useful information to this analysis. The third type of variables removed, are variable which describe essentially the same thing thing as the response. That is, they describe the value of the home in some measure. 
