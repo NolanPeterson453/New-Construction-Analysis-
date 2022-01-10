@@ -97,3 +97,16 @@ for home value.
 
   - Distribution of home sale price is right skewed with the vast
     majority of homes selling for between $100,000 and $750,000.
+
+### Sale Price of Home
+
+``` 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+ 124000  265000  350000  411802  484000 2950000 
+```
+
+    Mean Sale Price $411801.82.
+
+    Median Sale Price $350000.
+
+![](README_files/figure-gfm/unnamed-chunk-1-1.png)<!-- -->

@@ -6,7 +6,7 @@ output: github_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE, comment = NA)
 ```
 
 
@@ -66,6 +66,65 @@ Only observations where the home was sold were kept in the final data set. This 
 ### Key Insights 
 
 * Distribution of home sale price is right skewed with the vast majority of homes selling for between \$100,000 and \$750,000. 
+
+### Sale Price of Home 
+
+```{r echo=FALSE}
+# Library statements 
+library(tidyverse)
+library(hablar)
+library(scales)
+library(ggthemes)
+library(ggrepel)
+library(knitr)
+
+# Read in data 
+soc_data <- read_csv(file = "https://raw.githubusercontent.com/NolanPeterson453/New-Construction-Analysis-/main/02_data/cleaned_soc.csv")
+
+# Assign column types 
+factor_vars <- c("ACS", "AGER", "ASSOC", "BASE", "CON", "DECK", "DET", 
+                 "DIV", "FNBS", "FOYER", "FRAME", "GAR", "HEAT", "HEAT2", 
+                 "LNDR", "MFGS", "PATI", "PRCH", "SEWER", "STOR", "WAL1", 
+                 "WAL2", "WALS","WATER", "BEDR", "FPLS", "FULB", "HAFB", "FUEL",
+                 "FUEL2")
+
+contin_vars <- c("FSLPR", "FSQFS", "LOTV", "FFNSQ", "AREA")
+
+soc_data <- soc_data %>% 
+  convert(fct(factor_vars),
+          num(contin_vars))
+
+# Summary statistics for response
+summary(soc_data$FSLPR) 
+cat(paste0('Mean Sale Price $',round(mean(soc_data$FSLPR), 2), '.\n'))
+cat(paste0('Median Sale Price $',round(median(soc_data$FSLPR), 2), '.\n'))
+
+# Distribution of Home Sale Price plot
+cuts <- data.frame(ref = c("Mean Sale Price", "Median Sale Price"),
+                   vals = c(mean(soc_data$FSLPR), median(soc_data$FSLPR)),
+                   stringsAsFactors = FALSE)
+soc_data %>% 
+  ggplot(aes(x = FSLPR)) +
+  geom_bar(stat="bin", 
+           fill = "#244747") +
+  scale_x_continuous(labels = dollar_format()) +
+  labs(title = "Distribution of Home Sale Price",
+       x = "Final Sale Price of Home", 
+       y = "Count of Homes") + 
+  geom_vline(aes(xintercept = vals, color = ref),
+             data = cuts,
+             show.legend = FALSE) +
+  geom_text(aes(x = vals,
+                y = c(800,1500), 
+                label = ref,
+                color = ref,
+                angle = 90, 
+                vjust = 0.90),
+            data = cuts,
+            show.legend = FALSE)
+
+```
+
 
 
 
