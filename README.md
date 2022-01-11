@@ -96,17 +96,107 @@ for home value.
 ### Key Insights
 
   - Distribution of home sale price is right skewed with the vast
-    majority of homes selling for between $100,000 and $750,000.
+    majority of homes selling for between $125,000 and $750,000.
+
+  - There is a strong association between region of home and
 
 ### Sale Price of Home
 
+THe sale price of the home is of particular interest because it can be
+used as a proxy of home value. It will be modeled as the response
+variable later on. For now though, there is a lot of information that
+can be gained with some simple analysis. The distribution of sale price
+is approximately normal with a right skew.
+
 ``` 
    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
- 124000  265000  350000  411802  484000 2950000 
+ 124000  252000  328000  384892  450000 2950000 
 ```
 
-    Mean Sale Price $411801.82.
+    Mean Sale Price $384891.65.
 
-    Median Sale Price $350000.
+    Median Sale Price $328000.
 
 ![](README_files/figure-gfm/unnamed-chunk-1-1.png)<!-- -->
+
+#### Region of Home and Sale Price
+
+It would not be illogical to assume that sale price depends the region
+which the home is located in. For example property values in west coast
+region are known to generally higher than the mid-west. This
+relationship can be visualized by using grouped box plots. As seen below
+the median sale price of homes in the East North Central, West North
+Central, South Atlantic, East South Central, and West South Central
+regions are roughly equal. While the median sale prices in the New
+England, Middle Atlantic, Mountain, and Pacific regions are all greater.
+
+![](README_files/figure-gfm/unnamed-chunk-2-1.png)<!-- -->
+
+To formally test weather an association exists between the sale price of
+the home and the region in which the home is located an analysis of
+variance (anova) can be conducted. The anova uses an F-test to test the
+following hypothesis:
+
+H\_0: There is no association between sale price and region.
+
+H\_a: There is an association between sale price and region.
+
+    Analysis of Variance Table
+    
+    Response: FSLPR
+                 Df     Sum Sq    Mean Sq F value    Pr(>F)    
+    DIV           8 7.3933e+15 9.2416e+14  342.33 < 2.2e-16 ***
+    Residuals 12434 3.3567e+16 2.6996e+12                      
+    ---
+    Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+As can be seen in the above anova table the p-value resulting from the
+F-test would result in the null hypothesis being rejected at the alpha =
+0.001 level. **In other words there is a statistically significant
+association between sale price and the region of the home.**
+
+#### Size of Home and Sale Price
+
+The most obvious metric of home size is square footage. Using the
+correlation as a measure of association the r-squared value of 0.58
+indicates a moderate association.
+
+    The correlation between sale price and square footage is 0.58.
+
+Furthermore a linear model which predicts sale price using only square
+feet of home as a predictor in order to better understand the
+relationship between these two numbers.
+
+``` 
+
+Call:
+lm(formula = FSLPR ~ FSQFS, data = soc_data, weights = WEIGHT)
+
+Weighted Residuals:
+     Min       1Q   Median       3Q      Max 
+-5313818  -674813  -158664   515115 21759024 
+
+Coefficients:
+            Estimate Std. Error t value Pr(>|t|)    
+(Intercept) 31795.34    4700.63   6.764  1.4e-11 ***
+FSQFS         142.03       1.78  79.802  < 2e-16 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Residual standard error: 1476000 on 12441 degrees of freedom
+Multiple R-squared:  0.3386,    Adjusted R-squared:  0.3385 
+F-statistic:  6368 on 1 and 12441 DF,  p-value: < 2.2e-16
+```
+
+Using a T-test it is determined that square footage of a home is a
+significant predictor of sale price. It can also be shown from the
+linear model that for every one unit increase in square footage the sale
+price of the home is expected to rise by $142.03.
+
+Other metrics of home size can also be useful predictors. For instance
+the number of bedrooms, bathrooms and half bathrooms are all variables
+which in addition to indicating the overall size of the house will
+provide information that can yield a more accurate estimate of sale
+price.
+
+![](README_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->![](README_files/figure-gfm/unnamed-chunk-6-2.png)<!-- -->![](README_files/figure-gfm/unnamed-chunk-6-3.png)<!-- -->

@@ -65,13 +65,18 @@ Only observations where the home was sold were kept in the final data set. This 
 
 ### Key Insights 
 
-* Distribution of home sale price is right skewed with the vast majority of homes selling for between \$100,000 and \$750,000. 
+* Distribution of home sale price is right skewed with the vast majority of homes selling for between \$125,000 and \$750,000. 
 
-### Sale Price of Home 
+* There is a strong association between region of home and 
+
+### Sale Price of Home
+
+THe sale price of the home is of particular interest because it can be used as a proxy of home value. It will be modeled as the response variable later on. For now though, there is a lot of information that can be gained with some simple analysis. The distribution of sale price is approximately normal with a right skew. 
 
 ```{r echo=FALSE}
 # Library statements 
 library(tidyverse)
+library(splitstackshape)
 library(hablar)
 library(scales)
 library(ggthemes)
@@ -94,20 +99,25 @@ soc_data <- soc_data %>%
   convert(fct(factor_vars),
           num(contin_vars))
 
+# Expand by Sample weight 
+soc_data_expanded <- expandRows(soc_data, 'WEIGHT')
+
 # Summary statistics for response
-summary(soc_data$FSLPR) 
-cat(paste0('Mean Sale Price $',round(mean(soc_data$FSLPR), 2), '.\n'))
-cat(paste0('Median Sale Price $',round(median(soc_data$FSLPR), 2), '.\n'))
+summary(soc_data_expanded$FSLPR) 
+cat(paste0('Mean Sale Price $',round(mean(soc_data_expanded$FSLPR), 2), '.\n'))
+cat(paste0('Median Sale Price $',round(median(soc_data_expanded$FSLPR), 2), '.\n'))
 
 # Distribution of Home Sale Price plot
 cuts <- data.frame(ref = c("Mean Sale Price", "Median Sale Price"),
-                   vals = c(mean(soc_data$FSLPR), median(soc_data$FSLPR)),
+                   vals = c(mean(soc_data_expanded$FSLPR), median(soc_data_expanded$FSLPR)),
                    stringsAsFactors = FALSE)
-soc_data %>% 
+
+soc_data_expanded %>% 
   ggplot(aes(x = FSLPR)) +
   geom_bar(stat="bin", 
            fill = "#244747") +
   scale_x_continuous(labels = dollar_format()) +
+  scale_y_continuous(labels = comma) +
   labs(title = "Distribution of Home Sale Price",
        x = "Final Sale Price of Home", 
        y = "Count of Homes") + 
@@ -115,13 +125,154 @@ soc_data %>%
              data = cuts,
              show.legend = FALSE) +
   geom_text(aes(x = vals,
-                y = c(800,1500), 
+                y = c(50000,55000), 
                 label = ref,
                 color = ref,
                 angle = 90, 
                 vjust = 0.90),
             data = cuts,
             show.legend = FALSE)
+
+```
+
+#### Region of Home and Sale Price
+
+It would not be illogical to assume that sale price depends the region which the home is located in. For example property values in west coast region are known to generally higher than the mid-west. This relationship can be visualized by using grouped box plots. As seen below the median sale price of homes in the East North Central, West North Central, South Atlantic, East South Central, and West South Central regions are roughly equal. While the median sale prices in the New England, Middle Atlantic, Mountain, and Pacific regions are all greater. 
+
+```{r}
+# custom color palette
+econ_palette <- c("#e3120b", "#A37C27", "#91b8bd",
+                  "#F05837", "#9ae5de", "#244747",
+                  "#6A8A82", "#A7414A", "#660663")
+# Boxplot of sale price grouped by region
+regions <- c("New England",
+             "Middle Atlantic",
+             "East North Central",
+             "West North Central",
+             "South Atlantic",
+             "East South Central",
+             "West South Central",
+             "Mountain",
+             "Pacific")
+
+soc_data_expanded %>% 
+  ggplot(aes(y = FSLPR, x = DIV, color = DIV)) +
+  geom_boxplot() +
+  scale_y_continuous(labels = dollar_format()) +
+  scale_x_discrete(breaks = c(1:9),
+                   labels = regions) +
+  theme(axis.text.x = element_text(face="bold", color="black", 
+                                   size=8, angle=90)) +
+  labs(title = "Sale Price Grouped By Region",
+       x = "Region",
+       y = "Sale Price",
+       color = "Region") +
+  scale_color_manual(values = econ_palette, labels = regions)
+```
+
+To formally test weather an association exists between the sale price of the home and the region in which the home is located an analysis of variance (anova) can be conducted. The anova uses an F-test to test the following hypothesis:
+
+H_0: There is no association between sale price and region. 
+
+H_a: There is an association between sale price and region. 
+
+```{r}
+# Anova for association between DIV and FSLPR
+ANOVA_FSLPR_DIV <- anova(lm(FSLPR ~ DIV, 
+         data = soc_data,
+         weights = WEIGHT))
+ANOVA_FSLPR_DIV
+```
+
+As can be seen in the above anova table the p-value resulting from the F-test would result in the null hypothesis being rejected at the alpha = 0.001 level. **In other words there is a statistically significant association between sale price and the region of the home.** 
+
+#### Size of Home and Sale Price 
+
+The most obvious metric of home size is square footage. Using the correlation as a measure of association the r-squared value of 0.58 indicates a moderate association. 
+
+```{r}
+r_SQFS_FSLPR <- round(cor(soc_data_expanded$FSLPR, soc_data_expanded$FSQFS), 2)
+cat(paste0('The correlation between sale price and square footage is ', r_SQFS_FSLPR, '.'))
+```
+Furthermore a linear model which predicts sale price using only square feet of home as a predictor in order to better understand the relationship between these two numbers. 
+
+```{r}
+# Linear Model 
+FSLPR_FSQFS_mod <- lm(FSLPR ~ FSQFS, 
+                     data = soc_data,
+                     weights = WEIGHT)
+summary(FSLPR_FSQFS_mod)
+```
+
+
+Using a T-test it is determined that square footage of a home is a significant predictor of sale price. It can also be shown from the linear model that for every one unit increase in square footage the sale price of the home is expected to rise by \$142.03. 
+
+Other metrics of home size can also be useful predictors. For instance the number of bedrooms, bathrooms and half bathrooms are all variables which in addition to indicating the overall size of the house will provide information that can yield a more accurate estimate of sale price. 
+
+```{r}
+## Box plots for the sale price grouped by, bedrooms, bathrooms, and half baths
+ 
+# Bedroom boxplot
+bedroom_labs <- c("not reported",
+                  "2 bedrooms or less",
+                  "3 bedrooms",
+                  "4 bedrooms",
+                  "5 bedrooms or more")
+bedr_plot <- soc_data_expanded %>% 
+  ggplot(aes(y = FSLPR, x = BEDR, color = BEDR)) +
+  geom_boxplot() +
+  scale_y_continuous(labels = dollar_format()) +
+  scale_x_discrete(breaks = c(0, 2:5),
+                   labels = bedroom_labs) +
+  theme(axis.text.x = element_text(face="bold", color="black", 
+                                   size=8, angle=90)) +
+  labs(title = "Sale Price Grouped By Number of Bedrooms",
+       x = "Bedrooms",
+       y = "Sale Price",
+       color = "Bedrooms") +
+  scale_color_manual(values = econ_palette[1:5], labels = bedroom_labs)
+bedr_plot
+
+# Full bathroom boxplot 
+fullbath_labs <- c("1 bathroom or less",
+                   "2 bathrooms",
+                   "3 bathrooms",
+                   "4 bathrooms",
+                   "not reported")
+fulbath_plot <- soc_data_expanded %>% 
+  ggplot(aes(y = FSLPR, x = FULB, color = FULB)) +
+  geom_boxplot() +
+  scale_y_continuous(labels = dollar_format()) +
+  scale_x_discrete(breaks = c(1:4, 9),
+                   labels = fullbath_labs) +
+  theme(axis.text.x = element_text(face="bold", color="black", 
+                                   size=8, angle=90)) +
+  labs(title = "Sale Price Grouped By Number of Full Bathrooms",
+       x = "Full Bathrooms",
+       y = "Sale Price",
+       color = "Full Bathrooms") +
+  scale_color_manual(values = econ_palette[1:5], labels = fullbath_labs)
+fulbath_plot 
+
+# Half bathroom boxplot
+halfbath_labs <- c("0 half bathrooms",
+                   "1 half bathroom",
+                   "2 or more half bathrooms",
+                   "not reported")
+halfbath_plot <- soc_data_expanded %>% 
+  ggplot(aes(y = FSLPR, x = HAFB, color = HAFB)) +
+  geom_boxplot() +
+  scale_y_continuous(labels = dollar_format()) +
+  scale_x_discrete(breaks = c(0:2, 9),
+                   labels = halfbath_labs) +
+  theme(axis.text.x = element_text(face="bold", color="black", 
+                                   size=8, angle=90)) +
+  labs(title = "Sale Price Grouped By Number of Half Bathrooms",
+       x = "Half Bathrooms",
+       y = "Sale Price",
+       color = "Half Bathrooms") +
+  scale_color_manual(values = econ_palette[1:5], labels = halfbath_labs)
+halfbath_plot
 
 ```
 
