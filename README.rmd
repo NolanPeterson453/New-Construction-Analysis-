@@ -67,7 +67,11 @@ Only observations where the home was sold were kept in the final data set. This 
 
 * Distribution of home sale price is right skewed with the vast majority of homes selling for between \$125,000 and \$750,000. 
 
-* There is a strong association between region of home and 
+* There is a strong association between region of home and sale price. 
+
+* There is a moderate association between size of home and sale price with interesting patterns to be explored. 
+
+* Code relating to this section can be found here: https://github.com/NolanPeterson453/New-Construction-Analysis-/blob/main/01_scripts/explor_analysis_viz.R
 
 ### Sale Price of Home
 
@@ -276,7 +280,7 @@ halfbath_plot
 
 ```
 
-
+Interestingly homes with exactly 3 bedrooms have lowest median sale price when grouping sale price by the number of bedrooms a home has. The likely reason for this is that number of bedrooms is interacting with the location of the home. The data set does not specify if the home is located in a rural or urban area, however it would not be illogical to assume that 3 bedroom homes are the most common in rural areas where property values are low. This same behavior does not exist with with the number of bathrooms and half bathrooms. There is a high marginal cost associated with adding additional bathrooms to a home (due to the expensive fixtures and additional labor required). This cost must be reflected in the sale price of the home regardless of the location of the home. 
 
 
 
