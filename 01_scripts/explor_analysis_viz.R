@@ -13,6 +13,7 @@ library(scales)
 library(ggthemes)
 library(ggrepel)
 library(gridExtra)
+library(lubridate)
 
 # Read in data 
 soc_data <- read_csv(file = "https://raw.githubusercontent.com/NolanPeterson453/New-Construction-Analysis-/main/02_data/cleaned_soc.csv")
@@ -213,3 +214,20 @@ halfbath_plot <- soc_data_expanded %>%
   scale_color_manual(values = econ_palette[1:5], labels = halfbath_labs)
 halfbath_plot
 
+## length of construction time as predictor 
+soc_data %>% 
+  mutate(CONST_TIME = difftime(COMP, STRT, units = "days")) %>% 
+  ggplot(aes(x = CONST_TIME, y = FSLPR)) +
+  geom_point() +
+  geom_smooth() +
+  scale_x_continuous(labels = comma) +
+  scale_y_continuous(labels = dollar_format())
+
+# Construction time vs size of house 
+soc_data %>% 
+  mutate(CONST_TIME = difftime(COMP, STRT, units = "days")) %>% 
+  ggplot(aes(x = CONST_TIME, y = FSQFS)) +
+  geom_point() +
+  geom_smooth() +
+  scale_x_continuous(labels = comma) +
+  scale_y_continuous(labels = comma)

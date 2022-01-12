@@ -12,6 +12,7 @@ library(splitstackshape)
 library(leaps)
 library(ranger)
 library(caret)
+library(dummies)
 
 # Read in data 
 soc_data <- read_csv(file = "https://raw.githubusercontent.com/NolanPeterson453/New-Construction-Analysis-/main/02_data/cleaned_soc.csv")
@@ -59,21 +60,21 @@ test_expanded <- soc_data_expanded[!sample, ]
 ## Testing assumptions of linear regression 
 
 # Correlation matrix of continous predictors and response
-  # No apparent multicollinearity 
+# No apparent multicollinearity 
 cor(select(train, contin_vars))
 
 # Null model 
-H_0_model <- lm(FSLPR ~ 1, data = train, weights = WEIGHT)
-summary(H_0_model)
+null_linear_model <- lm(FSLPR ~ 1, data = train, weights = WEIGHT)
+summary(null_linear_model)
 
 # Full model 
-H_a_model_1 <- lm(FSLPR ~ . - WEIGHT, data = train, weights = WEIGHT)
-summary(H_a_model_1) # Adjusted R-squared:  0.579
+full_linear_model <- lm(FSLPR ~ . - WEIGHT, data = train, weights = WEIGHT)
+summary(full_linear_model) # Adjusted R-squared:  0.579
 
 # Analyzing plots of full model 
   # potential issue with normality of residuals 
   # potnetial high leverage points 
-plot(H_a_model_1)
+plot(full_linear_model)
 
 ## Testing log transformations in order to correct 
 
@@ -95,23 +96,23 @@ plot(soc_data$AREA, soc_data$FSLPR)
 plot(log(soc_data$AREA), soc_data$FSLPR)
 
 # Fit model with log transformations  
-H_a_model_2 <- lm(FSLPR ~ . + log(FSQFS) + log(LOTV) + log(AREA) 
+log_trans_linear_model <- lm(FSLPR ~ . + log(FSQFS) + log(LOTV) + log(AREA) 
                   - WEIGHT - FSQFS - LOTV - AREA, 
                   data = train,
                   weights = WEIGHT)
-summary(H_a_model_2) #  Adjusted R-squared:  0.5555
+summary(log_trans_linear_model) #  Adjusted R-squared:  0.5555
 
 # Analyzing plots of transformed model 
   # potential issue with normality of residuals 
   # potnetial high leverage points 
-plot(H_a_model_2)
+plot(log_trans_linear_model)
 
 ## Model Selection 
 
 # Choose best model using stepwise selection with AIC as criterion 
 n <- dim(soc_data)[1]
-H_a_model_3 <- step(H_a_model_1, direction = "both", k = log(n))
-summary(H_a_model_3) # Adjusted R-squared:  0.5754
+AIC_linear_model <- step(full_linear_model, direction = "both", k = log(n))
+summary(AIC_Linear_model) # Adjusted R-squared:  0.5754
 
 # Find model MSE on train data 
   # Number of regression parameters for calculating degrees of freedom in MSE calculation 
@@ -126,13 +127,13 @@ MSE_calc <- function(predicted, actual, n, p){
   sum((predicted - actual)^2, na.rm = TRUE) / (n - p)
 }
 
-MSE_train_linear <- MSE_calc(predicted = H_a_model_3$fitted.values,
+MSE_train_linear <- MSE_calc(predicted = AIC_Linear_model$fitted.values,
                              actual = train$FSLPR,
                              n = n_train, 
                              p = num_reg_prams) #2.5601e+10
 
 # Find model MSE on test data 
-linear_preds <- predict(H_a_model_3, newdata = test)
+linear_preds <- predict(AIC_Linear_model, newdata = test)
 MSE_test_linear <- MSE_calc(predicted = linear_preds,
                             actual = test$FSLPR,
                             n = n_test, 
@@ -167,12 +168,19 @@ MSE_test_ranger <- MSE_calc(predicted = ranger_pred$predictions,
                             p = num_reg_prams) #1.2325e+10
 
 # Tune model using caret package 
-tunned_ranger <- train(FSLPR ~ . - WEIGHT, 
-                    data = train, 
-                    weights =  train$WEIGHT,
-                    method = 'ranger')
+# tunned_ranger <- train(FSLPR ~ . - WEIGHT, 
+#                     data = train, 
+#                     weights =  train$WEIGHT,
+#                     method = 'ranger')
 
-tunned_ranger_model <- tunned_ranger$finalModel
+# Refit tuned model using tunned_ranger parameters for increased speed
+tunned_ranger_model <- ranger(FSLPR ~ . - WEIGHT, 
+                              data = train, 
+                              case.weights =  train$WEIGHT,
+                              num.trees = 500,
+                              mtry = 34,
+                              min.node.size = 5,
+                              verbose = TRUE)
 
 # Find model MSE on train data
 MSE_train_tunned_ranger <- MSE_calc(predicted = tunned_ranger_model$predictions,
@@ -180,8 +188,59 @@ MSE_train_tunned_ranger <- MSE_calc(predicted = tunned_ranger_model$predictions,
                                     n = n_train,
                                     p = num_reg_prams) #1.3509e+10
 
+## Make test set with dummy encoding matching best ranger model dummy encoding 
+
+# Get column names encoding from ranger model 
+ranger_dummy_names <- tunned_ranger_model[["xNames"]]
+
+# Convert BASE variable to dummy encoding and match names with ranger model encoding
+base_dum <- dummy_cols(test$BASE, remove_first_dummy = TRUE) %>% 
+  select(-1) 
+colnames(base_dum) <- ranger_dummy_names[4:7]
+
+# Convert HEAT variable to dummy encoding and match names with ranger model encoding
+heat1_dum <- dummy_cols(test$HEAT, remove_first_dummy = TRUE) %>% 
+  select(-1)
+colnames(heat1_dum) <- ranger_dummy_names[16:19]
+
+# Convert HEAT2 variable to dummy encoding and match names with ranger model encoding
+heat2_dum <- dummy_cols(test$HEAT2, remove_first_dummy = TRUE) %>% 
+  select(-1)
+colnames(heat2_dum) <- ranger_dummy_names[20:23]
+
+# Convert WAL1 variable to dummy encoding and match names with ranger model encoding
+wal1_dum <- dummy_cols(test$WAL1, remove_first_dummy = TRUE) %>% 
+  select(-1)
+colnames(wal1_dum) <- ranger_dummy_names[30:37]
+
+# Convert WAL2 variable to dummy encoding and match names with ranger model encoding
+wal2_dum <- dummy_cols(test$WAL2, remove_first_dummy = TRUE) %>% 
+  select(-1)
+colnames(wal2_dum) <- ranger_dummy_names[38:45]
+
+# Convert FUEL variable to dummy encoding and match names with ranger model encoding
+# fill unused level with 0 to match train set 
+fuel1_dum <- dummy_cols(test$FUEL, remove_first_dummy = TRUE) %>% 
+  select(-1)
+fuel1_dum$.data_04 <- rep(0, dim(fuel1_dum)[1])
+colnames(fuel1_dum) <- ranger_dummy_names[55:59]
+
+# Convert FUEL2 variable to dummy encoding and match names with ranger model encoding
+fuel2_dum <- dummy_cols(test$FUEL2, remove_first_dummy = TRUE) %>% 
+  select(-1)
+colnames(fuel2_dum) <- ranger_dummy_names[60:63]
+
+# Construct matching test set by replacing variables with their corresponding dummy data frame
+test_dum <- test %>% 
+  select(-BASE, -HEAT, -HEAT2, -WAL2, -FUEL, -FUEL2, -WEIGHT, -FSLPR) %>% 
+  cbind(base_dum, heat1_dum, heat2_dum, wal1_dum, wal2_dum, fuel1_dum, fuel2_dum)
+
 # Find model MSE on test data
 tunned_ranger_pred <- predict(tunned_ranger_model,
-                       data = test,
+                       data = test_dum,
                        case.weights = test$WEIGHT)
-MSE_test_ranger <- sum((tunned_ranger_pred$predictions - test$FSLPR)^2) / (n_test - num_reg_prams)
+
+MSE_test_tunned_ranger <- MSE_calc(predicted = tunned_ranger_pred$predictions,
+                                   actual = test$FSLPR,
+                                   n = n_test,
+                                   p = num_reg_prams) #1.1067e+10

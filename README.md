@@ -91,6 +91,13 @@ Only observations where the home was sold were kept in the final data
 set. This is because sale price is the being used as the primary proxy
 for home value.
 
+### Training and Test Splits
+
+After all the above mentioned pre-processing steps were complete the
+data was split into a training data set and test data set. The training
+set is comprised of 80% of the data while the remaining 20% was devoted
+to the test set for model evaluation.
+
 ## Exploritory Data Analysis
 
 ### Key Insights
@@ -219,3 +226,19 @@ associated with adding additional bathrooms to a home (due to the
 expensive fixtures and additional labor required). This cost must be
 reflected in the sale price of the home regardless of the location of
 the home.
+
+## Models
+
+Every model in the this section will be trained on the training set and
+evaluated on the test set. The main metric that will be used to evaluate
+each model is mean squared error of the model (MSE). Additionally the
+coefficient of determination (R-squared value) and the Akaike
+information criterion (AIC) will be reported or used in choosing the
+best linear regression model.
+
+### Multiple Linear Regression
+
+A full linear model was fit that used all predictors in the data set to
+estimate sale price of the home. Using step-wise selection with AIC as
+the criterion features were selected for either inclusion or removal in
+the model.
