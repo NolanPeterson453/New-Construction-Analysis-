@@ -294,6 +294,11 @@ Every model in the this section will be trained on the training set and evaluate
 
 ### Multiple Linear Regression 
 
-A full linear model was fit that used all predictors in the data set to estimate sale price of the home. Using step-wise selection with AIC as the criterion features were selected for either inclusion or removal in the model. 
+A full linear model was fit that used all predictors in the data set to estimate sale price of the home. Using step-wise selection with AIC as the criterion features were selected for either inclusion or removal in the model. The resulting model was used to predict on the test set. The MSE from the prediction on the test set was 2.0244e+10. The linear model performance acts as a baseline for comparison with future models. 
+
+### Random Forest Models 
+
+
+
 
 
