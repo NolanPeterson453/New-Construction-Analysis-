@@ -289,6 +289,8 @@ Interestingly homes with exactly 3 bedrooms have lowest median sale price when g
 
 ## Models 
 
+* Code for all models can be found here: https://github.com/NolanPeterson453/New-Construction-Analysis-/blob/main/01_scripts/models.R
+
 Every model in the this section will be trained on the training set and evaluated on the test set. The main metric that will be used to evaluate each model is mean squared error of the model (MSE). Additionally the coefficient of determination (R-squared value) and the Akaike information criterion (AIC) will be reported or used in choosing the best linear regression model.  
 
 
@@ -298,6 +300,7 @@ A full linear model was fit that used all predictors in the data set to estimate
 
 ### Random Forest Models 
 
+An initial random forest model was fit on the training data using the ```ranger``` package using all available predictors. The model was not tuned in any way. This 'naive' model was used to predict on the test set. The resulting MSE was 1.2325e+10. After this initial random forest model was fit, hyper-parameter tuning was done in order to improve the model performance. The tuned model had an MSE of 1.1067e+10 on the test set. 
 
 
 
